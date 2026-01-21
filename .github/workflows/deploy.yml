@@ -1,4 +1,4 @@
-name: 🌌 ULTRA +30 Jobs Deploy to GitHub Pages 😎✨
+name: 🌌 ULTRA FIXED +30 Jobs Deploy to GitHub Pages 😎✨
 
 on:
   push:
@@ -35,15 +35,19 @@ jobs:
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
+          # show for logs (non-fatal)
           echo "Found package.json? ${{ steps.find_pkg.outputs.exists }}" || true
 
       - name: 🔎 Find first .html anywhere (safe)
         id: find_html
         run: |
-          DIR=$(find . -name "*.html" -not -path "./node_modules/*" | head -n 1 | xargs dirname 2>/dev/null || true)
+          # find first html file outside node_modules, take its dirname; fallback to repo root
+          DIR=$(find . -type f -name "*.html" -not -path "./node_modules/*" | head -n 1 || true)
           if [ -z "$DIR" ]; then
             echo "⚠️ No HTML found, defaulting to repo root"
             DIR="."
+          else
+            DIR=$(dirname "$DIR")
           fi
           echo "dir=$DIR" >> $GITHUB_OUTPUT
           echo "HTML deploy dir => $DIR" || true
@@ -63,7 +67,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: 📥 npm install if package.json exists
+      - name: 📥 npm install if package.json exists (guarded)
         run: |
           if [ "${{ needs.core_prep.outputs.has_pkg }}" = "true" ]; then
             echo "ℹ️ package.json detected — running npm install"
@@ -87,8 +91,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: 🧩 Run build script if it exists
+      - name: 🧩 Run build script if it exists (guarded)
         run: |
+          # we run a shell check to see if a "build" npm script exists, then run it; never fail the job
           if npm run | grep -q "build"; then
             echo "🏗️ Running npm run build"
             npm run build || echo "⚠️ build failed or errored — continuing"
@@ -106,10 +111,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: ▶️ Run npm run dev for a quick check (10s)
+      - name: ▶️ Run npm run dev for a quick 10s sanity check (guarded)
         run: |
           if npm run | grep -q "dev"; then
             echo "🚀 Starting dev for 10 seconds (sanity)"
+            # timeout ensures we don't block the runner; || true prevents fail
             timeout 10 npm run dev || echo "⚠️ dev exited or timed out — continuing"
           else
             echo "ℹ️ No dev script — skipping dev run"
@@ -117,18 +123,17 @@ jobs:
 
   # -----------------------
   # +30 COOL JOBS (safe echoes, checks, small tasks)
-  # Each job uses only guarded run steps (|| true) so nothing stops the pipeline.
-  # They all depend on install_stage so they run after packages installed.
+  # Each job depends on install_stage so they run after packages installed.
+  # They are intentionally simple and guarded so they won't break the workflow.
   # -----------------------
-
-  sparkle_01:
-    name: ✨ Sparkle Sweep 01
+  spark_01:
+    name: ✨ Spark Sweep 01
     needs: install_stage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Echo sparkle
-        run: echo "✨ Sparkle Sweep 01 — vibes good" || true
+        run: echo "✨ Spark Sweep 01 — vibes good" || true
 
   aurora_02:
     name: 🌈 Aurora Check 02
@@ -166,7 +171,7 @@ jobs:
       - name: Echo star
         run: echo "🌟 Starlit Smoke 05 — all bright" || true
 
-  aurora_06:
+  glow_06:
     name: 🔆 Glow Patrol 06
     needs: install_stage
     runs-on: ubuntu-latest
@@ -283,7 +288,7 @@ jobs:
       - name: Ember pulse
         run: echo "🔥 Ember Pulse 18 — pulse ok" || true
 
-  echo_19:
+  beacon_19:
     name: 📡 Beacon Echo 19
     needs: install_stage
     runs-on: ubuntu-latest
@@ -292,7 +297,7 @@ jobs:
       - name: Beacon
         run: echo "📡 Beacon Echo 19 — pinged" || true
 
-  drift_20:
+  driftburst_20:
     name: 🌪️ Drift Burst 20
     needs: install_stage
     runs-on: ubuntu-latest
@@ -301,7 +306,7 @@ jobs:
       - name: Drift burst
         run: echo "🌪️ Drift Burst 20 — breeze strong" || true
 
-  ember_21:
+  ember_echo_21:
     name: 🔥 Ember Echo 21
     needs: install_stage
     runs-on: ubuntu-latest
@@ -364,7 +369,7 @@ jobs:
       - name: Pixel audit
         run: echo "🟦 Pixel Audit 27 — all pixels present" || true
 
-  echo_28:
+  megaecho_28:
     name: 📣 Mega Echo 28
     needs: install_stage
     runs-on: ubuntu-latest
@@ -373,7 +378,7 @@ jobs:
       - name: Mega echo
         run: echo "📣 Mega Echo 28 — broadcast OK" || true
 
-  drift_29:
+  wind_29:
     name: 🌬️ Wind Whisper 29
     needs: install_stage
     runs-on: ubuntu-latest
@@ -391,62 +396,8 @@ jobs:
       - name: Prism shine
         run: echo "🔸 Prism Shine 30 — gleam" || true
 
-  nova_31:
-    name: 💫 Nova Spark 31
-    needs: install_stage
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Nova spark
-        run: echo "💫 Nova Spark 31 — tiny brilliance" || true
-
-  zenith_32:
-    name: 🧭 Zenith Whisper 32
-    needs: install_stage
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Zenith whisper
-        run: echo "🧭 Zenith Whisper 32 — direction true" || true
-
-  cascade_33:
-    name: 💦 Cascade Murmur 33
-    needs: install_stage
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Cascade murmur
-        run: echo "💦 Cascade Murmur 33 — flowing fine" || true
-
-  mercury_34:
-    name: ☀️ Mercury Ping 34
-    needs: install_stage
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Mercury ping
-        run: echo "☀️ Mercury Ping 34 — hot but safe" || true
-
-  lunar_35:
-    name: 🌙 Lunar Lull 35
-    needs: install_stage
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Lunar lull
-        run: echo "🌙 Lunar Lull 35 — calm night" || true
-
-  aurora_36:
-    name: 🌌 Aurora Finale 36
-    needs: install_stage
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Aurora finale
-        run: echo "🌌 Aurora Finale 36 — curtains" || true
-
   # -----------------------
-  # FINAL DEPLOY (waits for core_prep + all checks above)
+  # FINAL DEPLOY (waits for the pipeline above)
   # -----------------------
   deploy:
     name: 🌍 Deploy to GitHub Pages — Final Act
@@ -455,12 +406,12 @@ jobs:
       - install_stage
       - build_stage
       - dev_sanity
-      - sparkle_01
+      - spark_01
       - aurora_02
       - neon_03
       - comet_04
       - starlit_05
-      - aurora_06
+      - glow_06
       - ripple_07
       - ember_08
       - orbit_09
@@ -473,32 +424,26 @@ jobs:
       - prism_16
       - cascade_17
       - ember_18
-      - echo_19
-      - drift_20
-      - ember_21
+      - beacon_19
+      - driftburst_20
+      - ember_echo_21
       - aurora_22
       - comet_23
       - starlit_24
       - ripple_25
       - orbit_26
       - pixel_27
-      - echo_28
-      - drift_29
+      - megaecho_28
+      - wind_29
       - prism_30
-      - nova_31
-      - zenith_32
-      - cascade_33
-      - mercury_34
-      - lunar_35
-      - aurora_36
     runs-on: ubuntu-latest
     steps:
       - name: 🔁 Checkout (final)
         uses: actions/checkout@v4
 
-      - name: 📦 List deploy path
+      - name: 📦 Log deploy path
         run: |
-          echo "HTML deploy dir = ${{ needs.core_prep.outputs.html_dir }}" || true
+          echo "HTML deploy dir = '${{ needs.core_prep.outputs.html_dir }}'" || true
 
       - name: 📦 Upload Pages artifact (deploy dir)
         uses: actions/upload-pages-artifact@v3
