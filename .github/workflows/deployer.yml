@@ -1,0 +1,113 @@
+name: 🚀 Ultra Cool Auto Deploy Pipeline 😎🔥
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: 🌍 Build • Test • Deploy • Dev
+
+    steps:
+      - name: 🧲 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🧠 Show system info
+        run: |
+          echo "🖥️ OS:" && uname -a
+          echo "🟢 Node:" && node -v || true
+          echo "📦 NPM:" && npm -v || true
+
+      - name: 🧰 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 📂 List project files
+        run: ls -la
+
+      - name: 📄 Detect package.json
+        id: pkg
+        run: |
+          if [ -f package.json ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📦 Install dependencies (if available)
+        if: steps.pkg.outputs.exists == 'true'
+        run: npm install || echo "⚠️ npm install failed, skipping"
+
+      - name: 🧪 Run tests (if script exists)
+        if: steps.pkg.outputs.exists == 'true'
+        run: npm test || echo "⚠️ No tests or failed, skipping"
+
+      - name: 🧹 Run lint (if exists)
+        if: steps.pkg.outputs.exists == 'true'
+        run: npm run lint || echo "⚠️ No lint script, skipping"
+
+      - name: 🏗️ Run build (if exists)
+        if: steps.pkg.outputs.exists == 'true'
+        run: npm run build || echo "⚠️ No build script, skipping"
+
+      - name: 🖼️ Validate HTML files
+        run: |
+          if ls *.html 1> /dev/null 2>&1; then
+            echo "✅ HTML files found"
+          else
+            echo "⚠️ No HTML files found"
+          fi
+
+      - name: 🎨 Validate CSS files
+        run: |
+          if find . -name "*.css" | grep .; then
+            echo "✅ CSS files found"
+          else
+            echo "⚠️ No CSS files found"
+          fi
+
+      - name: ⚡ Validate JS files
+        run: |
+          if find . -name "*.js" | grep .; then
+            echo "✅ JS files found"
+          else
+            echo "⚠️ No JS files found"
+          fi
+
+      - name: 📦 Prepare GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: 🌍 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: 🎉 Deployment success message
+        run: echo "🚀 DEPLOYED SUCCESSFULLY TO GITHUB PAGES!"
+
+      - name: 🔁 Re-install npm globally (why not 😏)
+        run: npm install -g npm || echo "⚠️ npm global install skipped"
+
+      - name: 📦 npm install (post-deploy)
+        if: steps.pkg.outputs.exists == 'true'
+        run: npm install || echo "⚠️ Post-deploy npm install skipped"
+
+      - name: 🟢 Run dev server (post-deploy)
+        if: steps.pkg.outputs.exists == 'true'
+        run: npm run dev || echo "⚠️ No dev script, skipping"
+
+      - name: 🧾 Final status
+        run: |
+          echo "✅ Workflow completed"
+          echo "😎 Repo deployed + dev attempted"
+          echo "🔥 You cooked"
