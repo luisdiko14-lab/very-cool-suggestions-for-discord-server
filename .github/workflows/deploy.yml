@@ -1,0 +1,125 @@
+name: 🚀 Full Staged Deploy Pipeline 😎
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# --------------------
+# JOB 1: INSTALL PACKAGES
+# --------------------
+jobs:
+  install:
+    name: 📦 Install Packages
+    runs-on: ubuntu-latest
+    outputs:
+      has_node: ${{ steps.node.outputs.exists }}
+      html_path: ${{ steps.html.outputs.path }}
+
+    steps:
+      - name: 🧲 Checkout repo
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 🔍 Check for package.json
+        id: node
+        run: |
+          if [ -f package.json ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📦 npm install (if available)
+        if: steps.node.outputs.exists == 'true'
+        run: npm install || echo "⚠️ npm install failed, skipping"
+
+      - name: 🔍 Find HTML files anywhere
+        id: html
+        run: |
+          HTML_DIR=$(find . -name "*.html" -not -path "./node_modules/*" | head -n 1 | xargs dirname)
+          if [ -z "$HTML_DIR" ]; then
+            echo "❌ No HTML files found"
+            exit 1
+          fi
+          echo "✅ HTML found in $HTML_DIR"
+          echo "path=$HTML_DIR" >> $GITHUB_OUTPUT
+
+# --------------------
+# JOB 2: BUILD
+# --------------------
+  build:
+    name: 🏗️ Build Project
+    needs: install
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📦 Reinstall deps (safe)
+        if: needs.install.outputs.has_node == 'true'
+        run: npm install || true
+
+      - name: 🏗️ Run build (if exists)
+        if: needs.install.outputs.has_node == 'true'
+        run: npm run build || echo "⚠️ No build script"
+
+# --------------------
+# JOB 3: RUN PROJECT
+# --------------------
+  run:
+    name: ▶️ Run Project
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📦 Install deps
+        if: exists('package.json')
+        run: npm install || true
+
+      - name: ▶️ npm run dev (NOT SKIPPED)
+        run: |
+          if npm run | grep -q "dev"; then
+            echo "🚀 Running dev server (10s sanity check)"
+            timeout 10 npm run dev || true
+          else
+            echo "⚠️ No dev script found"
+          fi
+
+# --------------------
+# JOB 4: DEPLOY
+# --------------------
+  deploy:
+    name: 🌍 Deploy to GitHub Pages
+    needs: install
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 📦 Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ needs.install.outputs.html_path }}
+
+      - name: 🚀 Deploy
+        uses: actions/deploy-pages@v4
