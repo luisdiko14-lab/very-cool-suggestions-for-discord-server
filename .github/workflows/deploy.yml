@@ -143,6 +143,6 @@ jobs:
 
       - name: 🎉 Done
         run: |
-          runs-on: windows-latest
+          echo "Finished Setup"
           echo "✅ DEPLOY FINISHED"
           echo "😎 ZERO FAILS"
