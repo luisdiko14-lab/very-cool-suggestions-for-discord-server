@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Discord Server Idea Generator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #5865F2, #0f1013);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .card {
+      background: #2b2d31;
+      padding: 30px;
+      border-radius: 18px;
+      width: 450px;
+      text-align: center;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      color: #b5bac1;
+      margin-bottom: 20px;
+    }
+
+    .suggestion {
+      background: linear-gradient(135deg, #1e1f22, #232428);
+      border-radius: 14px;
+      padding: 22px;
+      font-size: 19px;
+      min-height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 15px;
+      opacity: 1;
+      transition: opacity 0.25s, transform 0.25s;
+      box-shadow: inset 0 0 20px rgba(88,101,242,.15);
+    }
+
+    .timer {
+      font-size: 14px;
+      color: #949ba4;
+      margin-bottom: 18px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #5865F2, #4752c4);
+      border: none;
+      border-radius: 14px;
+      padding: 15px 22px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      transition: transform 0.12s, box-shadow 0.12s;
+      box-shadow: 0 15px 40px rgba(88,101,242,.5);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 55px rgba(88,101,242,.7);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>🚀 Discord Server Ideas</h1>
+    <p>Fresh ideas — auto-refreshing</p>
+
+    <div class="suggestion" id="suggestion">
+      Click generate or wait 👇
+    </div>
+
+    <div class="timer" id="timer">
+      Next idea in 15s ⏳
+    </div>
+
+    <button onclick="manualSpin()">🎲 Generate Now</button>
+  </div>
+
+  <script>
+    const suggestions = [
+      "🎮 Late-Night Gaming — voice chats that never sleep",
+      "🧠 Brainrot Hub — memes, clips, and zero context",
+      "🤖 AI Playground — prompts, bots, experiments",
+      "🎨 Creative Studio — art, logos, thumbnails, feedback",
+      "📚 Study & Chill — silent VCs, lo-fi, motivation",
+      "🎤 Karaoke Chaos — sing or be judged",
+      "🧪 Bot Lab — break bots, test commands",
+      "👻 Horror Nights — stories, videos, midnight VC",
+      "🎵 Music Swap — trade playlists & discover songs",
+      "🏆 Competitive Arena — tournaments & ranked teams",
+      "🧃 Ultra Chill — no drama, only vibes",
+      "📸 Media Zone — edits, clips, photos",
+      "🕹️ Retro Vault — old games & nostalgia",
+      "📜 RP Universe — lore, quests, characters",
+      "🤯 Chaos Server — zero rules energy",
+      "🚀 Startup Lounge — ideas, feedback, grind",
+      "🧙‍♂️ Fantasy Guild — levels, quests, bosses",
+      "🎲 Mini-Game Hub — counting, word games, events",
+      "🧠 Deep Talks — 3AM conversations",
+      "🐱 Internet Pets — animals cure sadness",
+      "🎥 Watch Parties — movies & shows together",
+      "🛠️ Server Builders — layouts, roles, themes",
+      "💬 Anonymous Confessions — secrets & honesty",
+      "👑 Staff HQ — moderation & admin tips",
+      "🧪 Experimental Server — new Discord features",
+      "🌍 Global Hangout — meet people worldwide",
+      "🔥 Trend Watch — viral clips & drama",
+      "🎧 Voice-Only Lounge — no text, just talk",
+      "🧩 Coding Help — JS, Python, HTML support",
+      "🪐 Space & Science — theories & discoveries"
+    ];
+
+    let countdown = 15;
+    let interval;
+
+    function spin() {
+      const el = document.getElementById("suggestion");
+      const random = suggestions[Math.floor(Math.random() * suggestions.length)];
+      el.style.opacity = "0";
+      el.style.transform = "scale(0.96)";
+      setTimeout(() => {
+        el.textContent = random;
+        el.style.opacity = "1";
+        el.style.transform = "scale(1)";
+      }, 200);
+    }
+
+    function resetTimer() {
+      countdown = 15;
+      document.getElementById("timer").textContent =
+        `Next idea in ${countdown}s ⏳`;
+    }
+
+    function manualSpin() {
+      spin();
+      resetTimer();
+    }
+
+    interval = setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        spin();
+        resetTimer();
+      } else {
+        document.getElementById("timer").textContent =
+          `Next idea in ${countdown}s ⏳`;
+      }
+    }, 1000);
+  </script>
+
+</body>
+</html>
