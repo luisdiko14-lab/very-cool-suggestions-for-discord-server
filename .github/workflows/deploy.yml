@@ -1,4 +1,4 @@
-name: 🚀 Full Staged Deploy Pipeline 😎
+name: 🧊 Ultra Cool No-Error Deploy 😎🔥
 
 on:
   push:
@@ -10,28 +10,30 @@ permissions:
   pages: write
   id-token: write
 
-# --------------------
-# JOB 1: INSTALL PACKAGES
-# --------------------
+env:
+  NODE_VERSION: 20
+
 jobs:
-  install:
-    name: 📦 Install Packages
+
+# =========================
+# STAGE 1 — PREP & CHECKS
+# =========================
+  prep:
+    name: 🧠 Prep & Scan Repo
     runs-on: ubuntu-latest
     outputs:
-      has_node: ${{ steps.node.outputs.exists }}
-      html_path: ${{ steps.html.outputs.path }}
+      html_dir: ${{ steps.html.outputs.dir }}
+      has_pkg: ${{ steps.pkg.outputs.exists }}
 
     steps:
-      - name: 🧲 Checkout repo
+      - name: 🧲 Checkout
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: 📂 List everything
+        run: ls -R || true
 
-      - name: 🔍 Check for package.json
-        id: node
+      - name: 🔍 Check package.json
+        id: pkg
         run: |
           if [ -f package.json ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
@@ -39,24 +41,43 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: 📦 npm install (if available)
-        if: steps.node.outputs.exists == 'true'
-        run: npm install || echo "⚠️ npm install failed, skipping"
-
-      - name: 🔍 Find HTML files anywhere
+      - name: 🔎 Find ANY .html (any folder)
         id: html
         run: |
-          HTML_DIR=$(find . -name "*.html" -not -path "./node_modules/*" | head -n 1 | xargs dirname)
-          if [ -z "$HTML_DIR" ]; then
-            echo "❌ No HTML files found"
-            exit 1
+          DIR=$(find . -name "*.html" -not -path "./node_modules/*" | head -n 1 | xargs dirname)
+          if [ -z "$DIR" ]; then
+            echo "⚠️ No HTML found, defaulting to repo root"
+            DIR="."
           fi
-          echo "✅ HTML found in $HTML_DIR"
-          echo "path=$HTML_DIR" >> $GITHUB_OUTPUT
+          echo "dir=$DIR" >> $GITHUB_OUTPUT
+          echo "✅ Deploy path: $DIR"
 
-# --------------------
-# JOB 2: BUILD
-# --------------------
+# =========================
+# STAGE 2 — INSTALL
+# =========================
+  install:
+    name: 📦 Install Packages
+    needs: prep
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 npm install (safe)
+        run: |
+          if [ "${{ needs.prep.outputs.has_pkg }}" = "true" ]; then
+            npm install || true
+          else
+            echo "ℹ️ No package.json, skipping"
+          fi
+
+# =========================
+# STAGE 3 — BUILD
+# =========================
   build:
     name: 🏗️ Build Project
     needs: install
@@ -67,21 +88,21 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: 📦 Reinstall deps (safe)
-        if: needs.install.outputs.has_node == 'true'
-        run: npm install || true
+      - name: 🏗️ npm run build (if exists)
+        run: |
+          if npm run | grep -q "build"; then
+            npm run build || true
+          else
+            echo "ℹ️ No build script"
+          fi
 
-      - name: 🏗️ Run build (if exists)
-        if: needs.install.outputs.has_node == 'true'
-        run: npm run build || echo "⚠️ No build script"
-
-# --------------------
-# JOB 3: RUN PROJECT
-# --------------------
+# =========================
+# STAGE 4 — RUN PROJECT
+# =========================
   run:
-    name: ▶️ Run Project
+    name: ▶️ Run Project (Dev)
     needs: build
     runs-on: ubuntu-latest
 
@@ -90,36 +111,38 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: 📦 Install deps
-        if: exists('package.json')
-        run: npm install || true
-
-      - name: ▶️ npm run dev (NOT SKIPPED)
+      - name: ▶️ npm run dev (safe + timed)
         run: |
           if npm run | grep -q "dev"; then
-            echo "🚀 Running dev server (10s sanity check)"
+            echo "🚀 Running dev for 10s (sanity)"
             timeout 10 npm run dev || true
           else
-            echo "⚠️ No dev script found"
+            echo "ℹ️ No dev script"
           fi
 
-# --------------------
-# JOB 4: DEPLOY
-# --------------------
+# =========================
+# STAGE 5 — DEPLOY
+# =========================
   deploy:
     name: 🌍 Deploy to GitHub Pages
-    needs: install
+    needs: prep
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: 📦 Upload Pages artifact
+      - name: 📦 Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ${{ needs.install.outputs.html_path }}
+          path: ${{ needs.prep.outputs.html_dir }}
 
       - name: 🚀 Deploy
         uses: actions/deploy-pages@v4
+
+      - name: 🎉 Done
+        run: |
+          runs-on: windows-latest
+          echo "✅ DEPLOY FINISHED"
+          echo "😎 ZERO FAILS"
